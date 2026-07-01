@@ -275,6 +275,17 @@ h1 {
   gap: 8px;
   align-items: center;
   margin-top: -4px;
+  padding: 10px;
+  border: 1px solid rgba(177, 132, 63, 0.2);
+  border-radius: 8px;
+  background: rgba(248, 241, 230, 0.56);
+}
+
+.emoji-panel-label {
+  flex: 0 0 auto;
+  color: var(--gold);
+  font-size: 0.94rem;
+  font-weight: 700;
 }
 
 .emoji-button {
