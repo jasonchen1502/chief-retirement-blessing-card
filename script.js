@@ -7,6 +7,7 @@
   var copyLinkButton = document.getElementById("copyLinkButton");
   var exportButton = document.getElementById("exportButton");
   var importInput = document.getElementById("importInput");
+  var emojiPanel = document.getElementById("emojiPanel");
   var shareOutput = document.getElementById("shareOutput");
   var submitButton = messageForm.querySelector(".primary-button");
   var editIndex = -1;
@@ -150,6 +151,19 @@
     textarea.select();
   }
 
+  function insertEmoji(emoji) {
+    var start = messageInput.selectionStart || messageInput.value.length;
+    var end = messageInput.selectionEnd || start;
+    var nextValue = messageInput.value.slice(0, start) + emoji + messageInput.value.slice(end);
+
+    messageInput.value = nextValue.slice(0, 110);
+    var nextCursor = Math.min(start + emoji.length, messageInput.value.length);
+    messageInput.focus();
+    if (messageInput.setSelectionRange) {
+      messageInput.setSelectionRange(nextCursor, nextCursor);
+    }
+  }
+
   var messages = loadMessages();
   renderMessages(messages);
 
@@ -188,6 +202,13 @@
   cancelEditButton.addEventListener("click", function () {
     clearForm();
     shareOutput.textContent = "已取消編輯。";
+  });
+
+  emojiPanel.addEventListener("click", function (event) {
+    var button = event.target.closest(".emoji-button");
+    if (!button) return;
+
+    insertEmoji(button.dataset.emoji || "");
   });
 
   copyLinkButton.addEventListener("click", function () {
