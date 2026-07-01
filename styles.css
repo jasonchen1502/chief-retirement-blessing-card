@@ -355,6 +355,7 @@ h1 {
 .message-card p {
   margin-bottom: 14px;
   line-height: 1.75;
+  white-space: pre-wrap;
 }
 
 .message-card strong {
