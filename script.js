@@ -13,6 +13,16 @@
   var submitButton = messageForm.querySelector(".primary-button");
   var editIndex = -1;
   var cancelEditButton = document.createElement("button");
+  var stickerMap = {
+    thanks: { label: "感謝", legacy: "🙏" },
+    cheer: { label: "恭喜", legacy: "🎉" },
+    flower: { label: "花開", legacy: "🌸" },
+    tea: { label: "好茶", legacy: "☕" },
+    smile: { label: "微笑", legacy: "😊" },
+    heart: { label: "祝福", legacy: "💛" },
+    sparkle: { label: "閃耀", legacy: "✨" },
+    green: { label: "自在", legacy: "🌿" }
+  };
 
   cancelEditButton.className = "ghost-button";
   cancelEditButton.hidden = true;
@@ -141,6 +151,75 @@
     });
   }
 
+  function findLegacySticker(text, index) {
+    var keys = Object.keys(stickerMap);
+
+    for (var i = 0; i < keys.length; i += 1) {
+      var key = keys[i];
+      var legacy = stickerMap[key].legacy;
+      if (legacy && text.slice(index, index + legacy.length) === legacy) {
+        return {
+          key: key,
+          length: legacy.length
+        };
+      }
+    }
+
+    return null;
+  }
+
+  function appendSticker(parent, key) {
+    var sticker = stickerMap[key];
+    if (!sticker) return false;
+
+    var element = document.createElement("span");
+    element.className = "message-sticker sticker-" + key;
+    element.setAttribute("aria-label", sticker.label + "貼圖");
+    element.textContent = sticker.label;
+    parent.appendChild(element);
+    return true;
+  }
+
+  function renderMessageContent(parent, value) {
+    var text = String(value || "");
+    var tokenPattern = /\[\[sticker:([a-z]+)\]\]/g;
+    var cursor = 0;
+    var match;
+
+    function appendTextSegment(segment) {
+      var index = 0;
+      while (index < segment.length) {
+        var legacy = findLegacySticker(segment, index);
+        if (legacy) {
+          appendSticker(parent, legacy.key);
+          index += legacy.length;
+          continue;
+        }
+
+        var nextStickerIndex = segment.length;
+        Object.keys(stickerMap).forEach(function (key) {
+          var legacyText = stickerMap[key].legacy;
+          var foundIndex = legacyText ? segment.indexOf(legacyText, index) : -1;
+          if (foundIndex >= 0 && foundIndex < nextStickerIndex) {
+            nextStickerIndex = foundIndex;
+          }
+        });
+        parent.appendChild(document.createTextNode(segment.slice(index, nextStickerIndex)));
+        index = nextStickerIndex;
+      }
+    }
+
+    while ((match = tokenPattern.exec(text)) !== null) {
+      appendTextSegment(text.slice(cursor, match.index));
+      if (!appendSticker(parent, match[1])) {
+        parent.appendChild(document.createTextNode(match[0]));
+      }
+      cursor = match.index + match[0].length;
+    }
+
+    appendTextSegment(text.slice(cursor));
+  }
+
   function renderMessages(messages) {
     messagesGrid.innerHTML = "";
 
@@ -157,7 +236,7 @@
       card.className = "message-card";
 
       var text = document.createElement("p");
-      text.textContent = message.text;
+      renderMessageContent(text, message.text);
 
       var name = document.createElement("strong");
       name.textContent = "— " + (message.name || "匿名祝福");
@@ -220,13 +299,16 @@
     textarea.select();
   }
 
-  function insertEmoji(emoji) {
+  function insertSticker(stickerKey) {
+    if (!stickerMap[stickerKey]) return;
+
+    var token = "[[sticker:" + stickerKey + "]]";
     var start = messageInput.selectionStart || messageInput.value.length;
     var end = messageInput.selectionEnd || start;
-    var nextValue = messageInput.value.slice(0, start) + emoji + messageInput.value.slice(end);
+    var nextValue = messageInput.value.slice(0, start) + token + messageInput.value.slice(end);
 
     messageInput.value = nextValue.slice(0, 110);
-    var nextCursor = Math.min(start + emoji.length, messageInput.value.length);
+    var nextCursor = Math.min(start + token.length, messageInput.value.length);
     messageInput.focus();
     if (messageInput.setSelectionRange) {
       messageInput.setSelectionRange(nextCursor, nextCursor);
@@ -298,10 +380,10 @@
   });
 
   emojiPanel.addEventListener("click", function (event) {
-    var button = event.target.closest(".emoji-button");
+    var button = event.target.closest(".sticker-button");
     if (!button) return;
 
-    insertEmoji(button.dataset.emoji || "");
+    insertSticker(button.dataset.sticker || "");
   });
 
   copyLinkButton.addEventListener("click", function () {
