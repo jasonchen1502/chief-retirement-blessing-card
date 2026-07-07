@@ -353,9 +353,10 @@
   }
 
   function insertSticker(stickerKey) {
-    if (!stickerMap[stickerKey]) return;
+    var sticker = stickerMap[stickerKey];
+    if (!sticker) return;
 
-    var token = "[[sticker:" + stickerKey + "]]";
+    var token = sticker.legacy;
     var start = messageInput.selectionStart || messageInput.value.length;
     var end = messageInput.selectionEnd || start;
     var nextValue = messageInput.value.slice(0, start) + token + messageInput.value.slice(end);
