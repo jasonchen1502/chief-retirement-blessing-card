@@ -1,5 +1,6 @@
 (function () {
   var storageKey = "retirementBlessingsForChiefOnlyV1";
+  var cloudEndpoint = "https://script.google.com/macros/s/AKfycbwA_ZfzWR_gpDQKliTPC-YQSiodh49JBd2T2RSqVLyQKd0PAt29jsjN0a81G7v59UMg/exec";
   var messagesGrid = document.getElementById("messagesGrid");
   var messageForm = document.getElementById("messageForm");
   var nameInput = document.getElementById("nameInput");
@@ -41,6 +42,7 @@
       .slice(0, 100)
       .map(function (item) {
         return {
+          row: Number(item.row) || 0,
           name: String(item.name || "匿名祝福").trim().slice(0, 16),
           text: String(item.text).trim().slice(0, 110)
         };
@@ -69,6 +71,74 @@
 
   function saveMessages(messages) {
     localStorage.setItem(storageKey, JSON.stringify(messages));
+  }
+
+  function cloudRequest(params) {
+    return new Promise(function (resolve, reject) {
+      if (!cloudEndpoint) {
+        reject(new Error("cloud endpoint is not configured"));
+        return;
+      }
+
+      var callbackName = "chiefBlessingCallback" + Date.now() + Math.floor(Math.random() * 10000);
+      var script = document.createElement("script");
+      var timeout = setTimeout(function () {
+        cleanup();
+        reject(new Error("cloud request timed out"));
+      }, 12000);
+
+      function cleanup() {
+        clearTimeout(timeout);
+        try {
+          delete window[callbackName];
+        } catch (error) {
+          window[callbackName] = undefined;
+        }
+        if (script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+      }
+
+      window[callbackName] = function (payload) {
+        cleanup();
+        if (payload && payload.ok) {
+          resolve(payload);
+          return;
+        }
+        reject(new Error(payload && payload.error ? payload.error : "cloud request failed"));
+      };
+
+      params.callback = callbackName;
+      params.cache = String(Date.now());
+      script.src = cloudEndpoint + "?" + new URLSearchParams(params).toString();
+      script.onerror = function () {
+        cleanup();
+        reject(new Error("cloud request failed"));
+      };
+      document.body.appendChild(script);
+    });
+  }
+
+  function loadCloudMessages() {
+    return cloudRequest({ action: "list" }).then(function (payload) {
+      return sanitizeMessages(payload.messages || []);
+    });
+  }
+
+  function saveCloudMessages(message, currentMessage) {
+    var params = {
+      action: currentMessage && currentMessage.row ? "update" : "add",
+      name: message.name,
+      text: message.text
+    };
+
+    if (currentMessage && currentMessage.row) {
+      params.row = String(currentMessage.row);
+    }
+
+    return cloudRequest(params).then(function (payload) {
+      return sanitizeMessages(payload.messages || []);
+    });
   }
 
   function renderMessages(messages) {
@@ -134,9 +204,8 @@
     messageInput.focus();
   }
 
-  function makeShareUrl(messages) {
-    var url = window.location.href.split("#")[0];
-    return url + "#messages=" + encodeMessages(messages);
+  function makeShareUrl() {
+    return window.location.href.split("#")[0];
   }
 
   function showManualCopy(url) {
@@ -167,6 +236,15 @@
   var messages = loadMessages();
   renderMessages(messages);
 
+  loadCloudMessages().then(function (cloudMessages) {
+    messages = cloudMessages;
+    saveMessages(messages);
+    renderMessages(messages);
+    shareOutput.textContent = "";
+  }).catch(function () {
+    shareOutput.textContent = "目前使用此裝置暫存資料，雲端祝福稍後再試。";
+  });
+
   messageForm.addEventListener("submit", function (event) {
     event.preventDefault();
 
@@ -178,18 +256,33 @@
       text: text
     };
 
-    if (editIndex >= 0 && messages[editIndex]) {
-      messages[editIndex] = nextMessage;
-      shareOutput.textContent = "祝福已更新。";
-    } else {
-      messages.unshift(nextMessage);
-      shareOutput.textContent = "祝福已送出。";
-    }
+    submitButton.disabled = true;
+    shareOutput.textContent = "正在送出祝福...";
 
-    messages = sanitizeMessages(messages);
-    saveMessages(messages);
-    renderMessages(messages);
-    clearForm();
+    var wasEditing = editIndex >= 0;
+
+    saveCloudMessages(nextMessage, messages[editIndex]).then(function (cloudMessages) {
+      messages = cloudMessages;
+      saveMessages(messages);
+      renderMessages(messages);
+      clearForm();
+      shareOutput.textContent = wasEditing ? "祝福已更新，手機與電腦都會同步顯示。" : "祝福已送出，手機與電腦都會同步顯示。";
+    }).catch(function () {
+      if (editIndex >= 0 && messages[editIndex]) {
+        messages[editIndex] = nextMessage;
+        shareOutput.textContent = "雲端暫時無法連線，已先存在此裝置。";
+      } else {
+        messages.unshift(nextMessage);
+        shareOutput.textContent = "雲端暫時無法連線，已先存在此裝置。";
+      }
+
+      messages = sanitizeMessages(messages);
+      saveMessages(messages);
+      renderMessages(messages);
+      clearForm();
+    }).finally(function () {
+      submitButton.disabled = false;
+    });
   });
 
   messagesGrid.addEventListener("click", function (event) {
@@ -212,7 +305,7 @@
   });
 
   copyLinkButton.addEventListener("click", function () {
-    var url = makeShareUrl(messages);
+    var url = makeShareUrl();
 
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(url).then(function () {
@@ -248,7 +341,7 @@
         messages = sanitizeMessages(imported.concat(messages));
         saveMessages(messages);
         renderMessages(messages);
-        shareOutput.textContent = "祝福已匯入。";
+        shareOutput.textContent = "祝福已匯入此裝置；新的祝福會從雲端同步。";
       } catch (error) {
         shareOutput.textContent = "匯入檔案格式不正確，請選擇 JSON 檔。";
       }
