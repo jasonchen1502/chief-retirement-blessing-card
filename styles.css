@@ -288,25 +288,75 @@ h1 {
   font-weight: 700;
 }
 
-.emoji-button {
+.sticker-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 58px;
+  height: 46px;
+  padding: 0;
   border: 1px solid rgba(39, 51, 49, 0.18);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.82);
   cursor: pointer;
-  font-size: 1.25rem;
   line-height: 1;
 }
 
-.emoji-button:hover,
-.emoji-button:focus {
+.sticker-button:hover,
+.sticker-button:focus {
   border-color: rgba(177, 132, 63, 0.54);
   box-shadow: 0 0 0 3px rgba(177, 132, 63, 0.12);
   outline: none;
+}
+
+.message-sticker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 34px;
+  margin: 0 4px;
+  border: 2px solid rgba(39, 51, 49, 0.12);
+  border-radius: 999px 999px 999px 12px;
+  color: #4c4031;
+  background: #fff8df;
+  box-shadow: 0 4px 10px rgba(41, 49, 47, 0.12);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.sticker-thanks {
+  background: linear-gradient(135deg, #fff2ca, #f8d98a);
+}
+
+.sticker-cheer {
+  background: linear-gradient(135deg, #ffe3dc, #f6aaa0);
+}
+
+.sticker-flower {
+  background: linear-gradient(135deg, #fff7fb, #f7bed3);
+}
+
+.sticker-tea {
+  background: linear-gradient(135deg, #eef8ed, #bfe0c5);
+}
+
+.sticker-smile {
+  background: linear-gradient(135deg, #fff4b8, #f7cf59);
+}
+
+.sticker-heart {
+  background: linear-gradient(135deg, #ffe8ee, #efa0b1);
+}
+
+.sticker-sparkle {
+  background: linear-gradient(135deg, #eef5ff, #b9d2f5);
+}
+
+.sticker-green {
+  background: linear-gradient(135deg, #f0fbef, #a9d9b5);
 }
 
 .message-form input:focus,
