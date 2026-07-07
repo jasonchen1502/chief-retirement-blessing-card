@@ -313,9 +313,9 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 58px;
-  height: 42px;
-  margin: 0 4px;
+  width: 1.65em;
+  height: 1.65em;
+  margin: 0 2px;
   vertical-align: middle;
 }
 
