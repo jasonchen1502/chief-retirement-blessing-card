@@ -313,10 +313,10 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.65em;
-  height: 1.65em;
-  margin: 0 2px;
-  vertical-align: middle;
+  width: 1.35em;
+  height: 1.35em;
+  margin: 0 1px;
+  vertical-align: -0.22em;
 }
 
 .sticker-image {
@@ -325,38 +325,6 @@ h1 {
   height: 100%;
   user-select: none;
   pointer-events: none;
-}
-
-.sticker-thanks {
-  background: linear-gradient(135deg, #fff2ca, #f8d98a);
-}
-
-.sticker-cheer {
-  background: linear-gradient(135deg, #ffe3dc, #f6aaa0);
-}
-
-.sticker-flower {
-  background: linear-gradient(135deg, #fff7fb, #f7bed3);
-}
-
-.sticker-tea {
-  background: linear-gradient(135deg, #eef8ed, #bfe0c5);
-}
-
-.sticker-smile {
-  background: linear-gradient(135deg, #fff4b8, #f7cf59);
-}
-
-.sticker-heart {
-  background: linear-gradient(135deg, #ffe8ee, #efa0b1);
-}
-
-.sticker-sparkle {
-  background: linear-gradient(135deg, #eef5ff, #b9d2f5);
-}
-
-.sticker-green {
-  background: linear-gradient(135deg, #f0fbef, #a9d9b5);
 }
 
 .message-form input:focus,
